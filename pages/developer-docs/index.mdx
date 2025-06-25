@@ -1,0 +1,341 @@
+---
+title: Developer Documentation
+description: Complete guide to integrating with the AliraAI Teacher Assessment Platform APIs
+---
+
+# Developer Documentation
+
+Welcome to the AliraAI Developer Documentation. This comprehensive guide will help you integrate with our AI-powered teacher assessment platform using our REST APIs, SDKs, and webhooks.
+
+## Platform Overview
+
+AliraAI provides a complete API ecosystem for building assessment workflows, analyzing teacher competency data, and integrating with existing educational technology systems.
+
+### Core Platform Architecture
+
+```
+Frontend (Next.js 14)
+       ↑
+   API Layer
+       ↑
+AI Analysis Engine (Claude 3.5 Sonnet)
+       ↑
+Voice Processing (Hume EVI)
+       ↑
+Database (PostgreSQL + Prisma)
+```
+
+### Key Capabilities
+
+#### 🎙️ Voice Assessment APIs
+- **Session Management**: Create and manage voice assessment sessions
+- **Real-time Processing**: Stream voice data for immediate analysis
+- **Transcript Capture**: Automatic speech-to-text conversion
+- **Audio Quality**: High-fidelity voice processing via Hume EVI
+
+#### 🤖 AI Analysis APIs
+- **Competency Scoring**: Comprehensive teacher evaluation across 4 domains
+- **Feedback Generation**: Detailed, actionable improvement recommendations
+- **Rubric Application**: Research-based CLASS framework implementation
+- **Custom Analysis**: Configurable scoring criteria for organizations
+
+#### 📋 Data Management APIs
+- **Teacher Profiles**: Complete teacher information and history
+- **Assessment Records**: Historical performance tracking
+- **Progress Analytics**: Growth measurement and trending
+- **Organizational Insights**: Aggregate reporting and analytics
+
+#### 🔗 Integration APIs
+- **Single Sign-On**: Google OAuth and custom authentication
+- **LMS Integration**: Canvas, Schoology, Google Classroom
+- **Webhooks**: Real-time event notifications
+- **Data Export**: Comprehensive reporting and analytics export
+
+## Quick Start Options
+
+### 📈 Analytics Integration
+Perfect for retrieving assessment data and building custom dashboards:
+- Read-only access to assessment results
+- Aggregate organizational analytics
+- Progress tracking and reporting
+- Custom visualization development
+
+**Start here**: [Analytics API Reference](/developer-docs/api-reference/analytics)
+
+### 🎓 LMS Integration
+Ideal for embedding assessments in learning management systems:
+- Grade passback capabilities
+- Roster synchronization
+- Assignment integration
+- Single sign-on workflows
+
+**Start here**: [LMS Integration Guide](/integrations/learning-management)
+
+### 🏢 Enterprise Platform
+For organizations building comprehensive teacher evaluation systems:
+- Complete API access
+- Custom assessment workflows
+- White-label solutions
+- Advanced analytics and reporting
+
+**Start here**: [Enterprise API Documentation](/developer-docs/api-reference/enterprise)
+
+### 🛠️ Custom Applications
+For developers building new applications with AliraAI:
+- Full platform API access
+- Voice assessment integration
+- AI analysis capabilities
+- Real-time webhooks
+
+**Start here**: [Complete API Reference](/developer-docs/api-reference/overview)
+
+## Authentication
+
+AliraAI uses API keys for server-to-server authentication and OAuth 2.0 for user-facing applications.
+
+### Server-to-Server (API Keys)
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+### User Authentication (OAuth 2.0)
+```http
+Authorization: Bearer USER_ACCESS_TOKEN
+```
+
+**Learn more**: [Authentication Guide](/developer-docs/getting-started/authentication)
+
+## Core API Endpoints
+
+### Assessment Management
+```http
+POST   /api/v1/assessments          # Create new assessment
+GET    /api/v1/assessments/:id      # Retrieve assessment
+PUT    /api/v1/assessments/:id      # Update assessment
+POST   /api/v1/assessments/:id/submit # Submit for scoring
+```
+
+### Teacher Management
+```http
+GET    /api/v1/teachers             # List teachers
+POST   /api/v1/teachers             # Create teacher profile
+GET    /api/v1/teachers/:id         # Retrieve teacher
+PUT    /api/v1/teachers/:id         # Update teacher
+```
+
+### Scoring & Analysis
+```http
+POST   /api/v1/scoring/analyze      # Submit for AI analysis
+GET    /api/v1/scoring/results/:id  # Retrieve scoring results
+GET    /api/v1/scoring/feedback/:id # Get detailed feedback
+```
+
+### Organization Management
+```http
+GET    /api/v1/organizations/:id    # Get organization details
+GET    /api/v1/organizations/:id/analytics # Organization analytics
+POST   /api/v1/organizations/:id/teachers  # Add teacher to org
+```
+
+## SDKs and Libraries
+
+We provide official SDKs for popular programming languages:
+
+### JavaScript/TypeScript
+```bash
+npm install @aliraai/sdk
+```
+
+```javascript
+import { AliraAI } from '@aliraai/sdk';
+
+const client = new AliraAI({
+  apiKey: 'your-api-key',
+  environment: 'production' // or 'sandbox'
+});
+
+const assessment = await client.assessments.create({
+  teacherId: 'teacher-uuid',
+  type: 'comprehensive'
+});
+```
+
+### Python
+```bash
+pip install aliraai
+```
+
+```python
+from aliraai import AliraAI
+
+client = AliraAI(
+    api_key='your-api-key',
+    environment='production'
+)
+
+assessment = client.assessments.create(
+    teacher_id='teacher-uuid',
+    type='comprehensive'
+)
+```
+
+### React Components
+```bash
+npm install @aliraai/react
+```
+
+```jsx
+import { AssessmentWidget } from '@aliraai/react';
+
+function TeacherDashboard() {
+  return (
+    <AssessmentWidget
+      teacherId="teacher-uuid"
+      onComplete={(results) => console.log(results)}
+    />
+  );
+}
+```
+
+**Learn more**: [SDK Documentation](/developer-docs/sdks)
+
+## Webhooks
+
+Receive real-time notifications about assessment completions, teacher progress, and organizational events.
+
+### Supported Events
+```javascript
+// Assessment events
+assessment.completed    // Assessment scoring finished
+assessment.started      // Teacher began assessment
+assessment.failed       // Assessment processing error
+
+// Teacher events
+teacher.progress        // Milestone achievements
+teacher.created         // New teacher added
+teacher.updated         // Profile modifications
+
+// Organization events
+organization.analytics  // Weekly/monthly reports
+organization.quota      // Usage limit notifications
+```
+
+### Webhook Example
+```javascript
+// Webhook payload structure
+{
+  "event": "assessment.completed",
+  "timestamp": "2025-06-25T15:30:00Z",
+  "data": {
+    "assessmentId": "assess_1234567890",
+    "teacherId": "teacher_0987654321",
+    "scores": {
+      "overall": 6.2,
+      "domains": {
+        "emotional_support": 6.5,
+        "instructional_support": 6.1,
+        "child_development": 6.0,
+        "child_outcomes": 6.2
+      }
+    },
+    "organizationId": "org_1122334455"
+  }
+}
+```
+
+**Learn more**: [Webhook Documentation](/developer-docs/webhooks)
+
+## Rate Limits
+
+API rate limits ensure platform stability and fair usage:
+
+### Standard Limits
+- **Assessment API**: 100 requests/hour per API key
+- **Analytics API**: 1,000 requests/hour per API key
+- **Webhook delivery**: 10,000 events/day per endpoint
+- **Voice processing**: 50 concurrent sessions per organization
+
+### Enterprise Limits
+- **Custom rate limits** based on usage needs
+- **Dedicated infrastructure** for high-volume clients
+- **Priority support** and SLA guarantees
+- **Custom webhook scaling** for large deployments
+
+**Learn more**: [Rate Limiting Guide](/developer-docs/advanced/rate-limiting)
+
+## Error Handling
+
+AliraAI APIs use conventional HTTP response codes and structured error responses:
+
+### HTTP Status Codes
+- **200**: Success
+- **201**: Created successfully
+- **400**: Bad request (invalid parameters)
+- **401**: Unauthorized (invalid API key)
+- **403**: Forbidden (insufficient permissions)
+- **404**: Not found
+- **429**: Rate limit exceeded
+- **500**: Internal server error
+
+### Error Response Format
+```json
+{
+  "error": {
+    "code": "INVALID_TEACHER_ID",
+    "message": "The provided teacher ID does not exist",
+    "details": {
+      "teacherId": "teacher_invalid123",
+      "suggestion": "Verify the teacher ID and try again"
+    }
+  }
+}
+```
+
+**Learn more**: [Error Handling Guide](/developer-docs/advanced/error-handling)
+
+## Support and Resources
+
+### Developer Support
+- **📧 Email Support**: developers@aliraai.com
+- **💬 Developer Slack**: [Join our community](https://slack.aliraai.com)
+- **📚 Knowledge Base**: Comprehensive guides and tutorials
+- **🎥 Video Tutorials**: API integration examples
+
+### Community Resources
+- **GitHub Examples**: Sample code and integrations
+- **Stack Overflow**: Tag questions with `aliraai`
+- **Developer Blog**: Best practices and updates
+- **Office Hours**: Weekly Q&A sessions
+
+### Getting Help
+1. **Check the documentation** for your specific use case
+2. **Review example code** in our GitHub repositories
+3. **Search community forums** for similar questions
+4. **Contact developer support** for personalized assistance
+
+## What's Next?
+
+Ready to start building with AliraAI? Choose your path:
+
+### 🚀 Quick Integration (15 minutes)
+1. [Get your API key](/developer-docs/getting-started/authentication)
+2. [Make your first request](/developer-docs/getting-started/first-request)
+3. [Review example responses](/developer-docs/api-reference/examples)
+
+### 🏗️ Complete Integration (1-2 hours)
+1. [Set up authentication](/developer-docs/getting-started/authentication)
+2. [Install SDK](/developer-docs/sdks/javascript/installation)
+3. [Build assessment workflow](/developer-docs/api-reference/assessments)
+4. [Configure webhooks](/developer-docs/webhooks/setup)
+
+### 🎯 Advanced Implementation (1-2 days)
+1. [Custom assessment workflows](/developer-docs/advanced/custom-workflows)
+2. [Enterprise integration](/developer-docs/api-reference/enterprise)
+3. [Analytics dashboard](/developer-docs/advanced/analytics-integration)
+4. [White-label deployment](/developer-docs/advanced/white-labeling)
+
+---
+
+**Ready to transform teacher assessment with AI?** Start with our [Getting Started Guide](/developer-docs/getting-started) or explore the [complete API reference](/developer-docs/api-reference).
+
+*Join thousands of developers building the future of education technology with AliraAI's powerful APIs.*
