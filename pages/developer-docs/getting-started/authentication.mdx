@@ -1,0 +1,321 @@
+---
+title: Authentication
+description: Complete guide to authenticating with the AliraAI API
+---
+
+# Authentication
+
+AliraAI uses industry-standard authentication methods to secure API access. This guide covers all authentication options and best practices.
+
+## Authentication Methods
+
+### API Key Authentication (Server-to-Server)
+Best for backend services and server-side integrations.
+
+```http
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+### OAuth 2.0 (User-Authenticated)
+Best for applications that act on behalf of teachers or administrators.
+
+```http
+Authorization: Bearer USER_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+## Getting Your API Key
+
+### Step 1: Create Developer Account
+1. Visit [AliraAI Developer Portal](https://developers.aliraai.com)
+2. Sign in with your Google account
+3. Complete developer profile
+4. Accept developer terms
+
+### Step 2: Create Application
+1. Click "Create New Application"
+2. Choose application type:
+   - **Server Application**: For backend integrations
+   - **Client Application**: For frontend apps
+   - **Mobile Application**: For mobile apps
+3. Configure application settings
+4. Generate API keys
+
+### Step 3: Secure Your Keys
+```bash
+# Environment variables (recommended)
+export ALIRAAI_API_KEY="your-api-key-here"
+export ALIRAAI_ENVIRONMENT="production" # or "sandbox"
+```
+
+## API Key Types
+
+### Production Keys
+- **Usage**: Live production environments
+- **Rate Limits**: Full production limits
+- **Data**: Real teacher and assessment data
+- **Billing**: Counts toward usage quotas
+
+### Sandbox Keys
+- **Usage**: Development and testing
+- **Rate Limits**: Reduced for testing
+- **Data**: Test data only
+- **Billing**: No charges for sandbox usage
+
+### Webhook Keys
+- **Usage**: Webhook endpoint verification
+- **Purpose**: Secure webhook payload validation
+- **Scope**: Limited to webhook operations
+- **Security**: Rotatable for security
+
+## OAuth 2.0 Flow
+
+### Authorization Code Flow (Recommended)
+
+#### Step 1: Authorization Request
+```
+https://api.aliraai.com/oauth/authorize
+  ?response_type=code
+  &client_id=YOUR_CLIENT_ID
+  &redirect_uri=YOUR_REDIRECT_URI
+  &scope=assessments:read assessments:write teachers:read
+  &state=RANDOM_STATE_STRING
+```
+
+#### Step 2: Authorization Grant
+User grants permission, AliraAI redirects to your app:
+```
+https://yourapp.com/callback
+  ?code=AUTHORIZATION_CODE
+  &state=RANDOM_STATE_STRING
+```
+
+#### Step 3: Access Token Request
+```javascript
+const response = await fetch('https://api.aliraai.com/oauth/token', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    grant_type: 'authorization_code',
+    client_id: 'YOUR_CLIENT_ID',
+    client_secret: 'YOUR_CLIENT_SECRET',
+    code: 'AUTHORIZATION_CODE',
+    redirect_uri: 'YOUR_REDIRECT_URI'
+  })
+});
+
+const tokens = await response.json();
+// {
+//   "access_token": "eyJhbGciOiJIUzI1NiIs...",
+//   "token_type": "Bearer",
+//   "expires_in": 3600,
+//   "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
+//   "scope": "assessments:read assessments:write teachers:read"
+// }
+```
+
+### Available Scopes
+
+#### Assessment Scopes
+- `assessments:read` - Read assessment data
+- `assessments:write` - Create and update assessments
+- `assessments:delete` - Delete assessments
+- `assessments:score` - Access scoring and feedback
+
+#### Teacher Scopes
+- `teachers:read` - Read teacher profiles
+- `teachers:write` - Create and update teacher profiles
+- `teachers:analytics` - Access teacher analytics
+
+#### Organization Scopes
+- `organizations:read` - Read organization data
+- `organizations:write` - Manage organization settings
+- `organizations:analytics` - Access organization analytics
+- `organizations:admin` - Full organization administration
+
+## Making Authenticated Requests
+
+### Using API Keys
+```javascript
+const response = await fetch('https://api.aliraai.com/v1/assessments', {
+  headers: {
+    'Authorization': `Bearer ${process.env.ALIRAAI_API_KEY}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+### Using OAuth Tokens
+```javascript
+const response = await fetch('https://api.aliraai.com/v1/teachers/me', {
+  headers: {
+    'Authorization': `Bearer ${userAccessToken}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+## Token Management
+
+### Access Token Expiration
+Access tokens expire after 1 hour. Use refresh tokens to get new access tokens:
+
+```javascript
+async function refreshAccessToken(refreshToken) {
+  const response = await fetch('https://api.aliraai.com/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      client_id: 'YOUR_CLIENT_ID',
+      client_secret: 'YOUR_CLIENT_SECRET'
+    })
+  });
+  
+  return await response.json();
+}
+```
+
+### Token Storage Best Practices
+- **Access tokens**: Store in memory or secure session storage
+- **Refresh tokens**: Store securely (encrypted database)
+- **Never expose**: Don't include tokens in client-side code
+- **Rotate regularly**: Implement token rotation for security
+
+## Error Handling
+
+### Authentication Errors
+```json
+{
+  "error": {
+    "code": "INVALID_TOKEN",
+    "message": "The provided token is invalid or expired",
+    "details": {
+      "token_type": "access_token",
+      "expires_at": "2025-06-25T15:30:00Z"
+    }
+  }
+}
+```
+
+### Common Error Codes
+- `INVALID_TOKEN` - Token is invalid or malformed
+- `EXPIRED_TOKEN` - Token has expired
+- `INSUFFICIENT_SCOPE` - Token lacks required permissions
+- `RATE_LIMITED` - Too many requests
+- `INVALID_CLIENT` - Client credentials are invalid
+
+## Security Best Practices
+
+### API Key Security
+- **Environment variables**: Never hardcode keys
+- **Key rotation**: Rotate keys regularly
+- **Scope limitation**: Use minimal required scopes
+- **Monitoring**: Monitor API key usage
+
+### OAuth Security
+- **HTTPS only**: Always use HTTPS for OAuth flows
+- **State parameter**: Prevent CSRF attacks
+- **PKCE**: Use PKCE for public clients
+- **Token storage**: Secure token storage practices
+
+### Network Security
+- **TLS 1.2+**: Use modern TLS versions
+- **Certificate pinning**: Pin AliraAI certificates
+- **Request signing**: Sign sensitive requests
+- **IP restrictions**: Limit API access by IP (Enterprise)
+
+## Testing Authentication
+
+### Validate API Key
+```bash
+curl -X GET "https://api.aliraai.com/v1/auth/validate" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Test OAuth Flow
+```javascript
+// Test token endpoint
+const response = await fetch('https://api.aliraai.com/v1/auth/me', {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`
+  }
+});
+
+if (response.ok) {
+  const user = await response.json();
+  console.log('Authenticated as:', user.email);
+}
+```
+
+## Integration Examples
+
+### Express.js Middleware
+```javascript
+const authenticateAPI = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid authorization header' });
+  }
+  
+  const token = authHeader.substring(7);
+  try {
+    const response = await fetch('https://api.aliraai.com/v1/auth/validate', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (response.ok) {
+      req.user = await response.json();
+      next();
+    } else {
+      res.status(401).json({ error: 'Invalid token' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Authentication service unavailable' });
+  }
+};
+```
+
+### React Hook
+```jsx
+import { useState, useEffect } from 'react';
+
+function useAliraAIAuth() {
+  const [token, setToken] = useState(localStorage.getItem('aliraai_token'));
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    if (token) {
+      validateToken(token).then(userData => {
+        setUser(userData);
+      }).catch(() => {
+        setToken(null);
+        localStorage.removeItem('aliraai_token');
+      });
+    }
+  }, [token]);
+  
+  const login = async (authCode) => {
+    const tokens = await exchangeCodeForTokens(authCode);
+    setToken(tokens.access_token);
+    localStorage.setItem('aliraai_token', tokens.access_token);
+  };
+  
+  return { token, user, login };
+}
+```
+
+---
+
+**Next Steps**:
+- [Set up your development environment](/developer-docs/getting-started/environment-setup)
+- [Make your first API request](/developer-docs/getting-started/first-request)
+- [Explore the complete API reference](/developer-docs/api-reference)
+
+*Secure authentication is the foundation of successful AliraAI integration. Take time to implement these patterns correctly for a robust, secure application.*
